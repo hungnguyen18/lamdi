@@ -1,6 +1,7 @@
 package com.example.lamdi;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,33 +18,41 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements DialogCloseListener {
+public class MainActivity extends AppCompatActivity implements DialogCloseListener{
+
+    private DatabaseHandler db;
+
     private RecyclerView tasksRecyclerView;
     private TodoAdapter tasksAdapter;
-    private List<TodoModel> taskList;
-    private DatabaseHandler db;
     private FloatingActionButton fab;
+
+    private List<TodoModel> taskList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         db = new DatabaseHandler(this);
         db.openDatabase();
 
-        taskList = new ArrayList<>();
-
         tasksRecyclerView = findViewById(R.id.tasksRecyclerView);
         tasksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        tasksAdapter = new TodoAdapter(db, MainActivity.this);
+        tasksAdapter = new TodoAdapter(db,MainActivity.this);
         tasksRecyclerView.setAdapter(tasksAdapter);
+
+        ItemTouchHelper itemTouchHelper = new
+                ItemTouchHelper(new RecyclerItemTouchHelper(tasksAdapter));
+        itemTouchHelper.attachToRecyclerView(tasksRecyclerView);
 
         fab = findViewById(R.id.fab);
 
         taskList = db.getAllTasks();
         Collections.reverse(taskList);
+
         tasksAdapter.setTasks(taskList);
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -55,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements DialogCloseListen
     }
 
     @Override
-    public void handleDialogClose(DialogInterface dialog) {
+    public void handleDialogClose(DialogInterface dialog){
         taskList = db.getAllTasks();
         Collections.reverse(taskList);
         tasksAdapter.setTasks(taskList);
